@@ -1,34 +1,152 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>✨ Your Tasks</h2>
+<h2>✅ Your Tasks</h2>
 
-<form method="POST" action="/add-task">
-    <input type="text" name="title" placeholder="✍️ Enter a new task..." required>
-    <button type="submit">➕ Add Task</button>
-</form>
+<!-- Search and Filter Section -->
+<div class="filters-section">
+    <form method="GET" class="filters-form">
+        <div class="filter-group">
+            <input type="text" name="search" placeholder="🔍 Search tasks..." value="{{ request.args.get('search', '') }}">
+        </div>
+        
+        <div class="filter-group">
+            <select name="status" onchange="this.form.submit()">
+                <option value="all" {% if request.args.get('status') == 'all' or not request.args.get('status') %}selected{% endif %}>All Status</option>
+                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>✅ Completed</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <select name="priority" onchange="this.form.submit()">
+                <option value="all" {% if request.args.get('priority') == 'all' or not request.args.get('priority') %}selected{% endif %}>All Priorities</option>
+                <option value="high" {% if request.args.get('priority') == 'high' %}selected{% endif %}>🔴 High</option>
+                <option value="medium" {% if request.args.get('priority') == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                <option value="low" {% if request.args.get('priority') == 'low' %}selected{% endif %}>🟢 Low</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <select name="category" onchange="this.form.submit()">
+                <option value="all">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>{{ cat.capitalize() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn-search">🔍 Search</button>
+        <a href="/tasks" class="btn-clear">🔄 Clear</a>
+    </form>
+</div>
 
-<ul>
-{% for task in tasks %}
-    <li style="animation-delay: {{ loop.index0 * 0.1 }}s;">
-        <div style="flex: 1;">
-            {% if task.completed %}
-                <strike style="font-size: 18px;">{{ task.title }}</strike>
-            {% else %}
-                <span style="font-size: 18px; font-weight: 500;">{{ task.title }}</span>
-            {% endif %}
+<!-- Add Task Form -->
+<div class="add-task-section">
+    <button class="btn-add-task" onclick="toggleAddForm()">➕ Add New Task</button>
+    
+    <form method="POST" action="/add-task" class="task-form" id="addTaskForm" style="display: none;">
+        <div class="form-group">
+            <input type="text" name="title" placeholder="✍️ Task title" required>
         </div>
-        <div style="display: flex; gap: 10px;">
-            {% if not task.completed %}
-                <a href="/complete-task/{{ task.id }}" title="Mark as complete" style="color: #28a745;">✔️</a>
-            {% endif %}
-            <a href="/delete-task/{{ task.id }}" title="Delete task" style="color: #dc3545;">🗑️</a>
+        
+        <div class="form-group">
+            <textarea name="description" rows="2" placeholder="📝 Description (optional)"></textarea>
         </div>
-    </li>
-{% else %}
-    <li style="text-align: center; color: #999; font-style: italic;">
-        No tasks yet! Add your first task above 🚀
-    </li>
-{% endfor %}
-</ul>
+        
+        <div class="form-row">
+            <select name="priority" required>
+                <option value="medium" selected>🟡 Medium Priority</option>
+                <option value="high">🔴 High Priority</option>
+                <option value="low">🟢 Low Priority</option>
+            </select>
+            
+            <select name="category" required>
+                <option value="general" selected>📋 General</option>
+                <option value="work">💼 Work</option>
+                <option value="personal">👤 Personal</option>
+                <option value="shopping">🛒 Shopping</option>
+                <option value="health">💊 Health</option>
+                <option value="education">📚 Education</option>
+            </select>
+            
+            <input type="date" name="due_date" placeholder="Due Date">
+        </div>
+        
+        <div class="form-group">
+            <textarea name="notes" rows="2" placeholder="📌 Additional notes (optional)"></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">➕ Add Task</button>
+            <button type="button" class="btn-cancel" onclick="toggleAddForm()">❌ Cancel</button>
+        </div>
+    </form>
+</div>
+
+<!-- Tasks List -->
+<div class="tasks-list">
+    {% if tasks %}
+        {% for task in tasks %}
+            <div class="task-item {% if task.completed %}completed{% endif %} priority-{{ task.priority }}">
+                <div class="task-header">
+                    <div class="task-main">
+                        <input type="checkbox" 
+                               onclick="window.location.href='/complete-task/{{ task.id }}'" 
+                               {% if task.completed %}checked{% endif %}>
+                        <div class="task-content">
+                            <h3 class="task-title {% if task.completed %}strike{% endif %}">{{ task.title }}</h3>
+                            {% if task.description %}
+                                <p class="task-description">{{ task.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="task-meta">
+                        <span class="priority-badge priority-{{ task.priority }}">
+                            {% if task.priority == 'high' %}🔴{% elif task.priority == 'medium' %}🟡{% else %}🟢{% endif %}
+                            {{ task.priority.capitalize() }}
+                        </span>
+                        <span class="category-badge">{{ task.category.capitalize() }}</span>
+                        {% if task.due_date %}
+                            <span class="due-date {% if task.due_date.date() < today and not task.completed %}overdue{% endif %}">
+                                📅 {{ task.due_date.strftime('%b %d, %Y') }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if task.notes %}
+                    <div class="task-notes">
+                        📌 {{ task.notes }}
+                    </div>
+                {% endif %}
+                
+                <div class="task-actions">
+                    <a href="/edit-task/{{ task.id }}" class="btn-edit" title="Edit">✏️</a>
+                    <a href="/complete-task/{{ task.id }}" class="btn-toggle" title="Toggle Complete">
+                        {% if task.completed %}↩️{% else %}✅{% endif %}
+                    </a>
+                    <a href="/delete-task/{{ task.id }}" class="btn-delete" title="Delete" onclick="return confirm('Delete this task?')">🗑️</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>No tasks found!</h3>
+            <p>Start adding tasks to track your productivity 🚀</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleAddForm() {
+    const form = document.getElementById('addTaskForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+// Get today's date for comparison
+const today = new Date().toISOString().split('T')[0];
+</script>
 
 {% endblock %}

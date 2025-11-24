@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>✏️ Edit Task</h2>
+
+<form method="POST" class="task-form">
+    <div class="form-group">
+        <label for="title">Task Title *</label>
+        <input type="text" id="title" name="title" value="{{ task.title }}" placeholder="Enter task title" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="3" placeholder="Add task description">{{ task.description or '' }}</textarea>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+                <option value="low" {% if task.priority == 'low' %}selected{% endif %}>🟢 Low</option>
+                <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                <option value="high" {% if task.priority == 'high' %}selected{% endif %}>🔴 High</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="general" {% if task.category == 'general' %}selected{% endif %}>📋 General</option>
+                <option value="work" {% if task.category == 'work' %}selected{% endif %}>💼 Work</option>
+                <option value="personal" {% if task.category == 'personal' %}selected{% endif %}>👤 Personal</option>
+                <option value="shopping" {% if task.category == 'shopping' %}selected{% endif %}>🛒 Shopping</option>
+                <option value="health" {% if task.category == 'health' %}selected{% endif %}>💊 Health</option>
+                <option value="education" {% if task.category == 'education' %}selected{% endif %}>📚 Education</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="due_date">Due Date</label>
+            <input type="date" id="due_date" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') if task.due_date else '' }}">
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Additional notes">{{ task.notes or '' }}</textarea>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn-primary">💾 Save Changes</button>
+        <a href="/tasks" class="btn-secondary">❌ Cancel</a>
+    </div>
+</form>
+
+{% endblock %}
