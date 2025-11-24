@@ -1,90 +1,389 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>📊 Your Productivity Dashboard</h2>
+<h2>Your Productivity Dashboard</h2>
 
+<!-- Main Stats Grid -->
 <div class="stats-container">
-    <div class="stat-card">
+    <div class="stat-card stat-total">
         <h3>Total Tasks</h3>
-        <div class="stat-number">{{ total }}</div>
+        <div class="stat-number" id="totalCount">0</div>
         <p>All your tasks</p>
+        <div class="stat-footer">Active tracking</div>
     </div>
     
-    <div class="stat-card">
-        <h3>✅ Completed</h3>
-        <div class="stat-number">{{ completed }}</div>
+    <div class="stat-card stat-completed">
+        <h3>Completed</h3>
+        <div class="stat-number" id="completedCount">0</div>
         <p>Tasks finished</p>
+        <div class="stat-footer">{{ completion_rate }}% done</div>
     </div>
     
-    <div class="stat-card">
-        <h3>⏳ Pending</h3>
-        <div class="stat-number">{{ pending }}</div>
+    <div class="stat-card stat-pending">
+        <h3>Pending</h3>
+        <div class="stat-number" id="pendingCount">0</div>
         <p>Still to do</p>
+        <div class="stat-footer">Focus needed</div>
     </div>
     
-    <div class="stat-card">
-        <h3>📈 Progress</h3>
-        <div class="stat-number">{{ (completed * 100 // total) if total > 0 else 0 }}%</div>
+    <div class="stat-card stat-progress">
+        <h3>Progress</h3>
+        <div class="stat-number">{{ completion_rate }}%</div>
         <p>Completion rate</p>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
     </div>
 </div>
 
-<canvas id="taskChart" width="400" height="200"></canvas>
+<!-- Priority Analysis -->
+<div class="analytics-row">
+    <div class="analytics-card priority-analysis">
+        <h3>Priority Breakdown</h3>
+        <div class="priority-stats">
+            <div class="priority-item high">
+                <div class="priority-details">
+                    <span class="priority-label">High Priority</span>
+                    <span class="priority-value">{{ high_priority }} tasks</span>
+                </div>
+            </div>
+            <div class="priority-item medium">
+                <div class="priority-details">
+                    <span class="priority-label">Medium Priority</span>
+                    <span class="priority-value">{{ medium_priority }} tasks</span>
+                </div>
+            </div>
+            <div class="priority-item low">
+                <div class="priority-details">
+                    <span class="priority-label">Low Priority</span>
+                    <span class="priority-value">{{ low_priority }} tasks</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-card">
+        <h3>Task Alerts</h3>
+        <div class="alert-stats">
+            <div class="alert-item {% if overdue > 0 %}alert-danger{% endif %}">
+                <div class="alert-content">
+                    <span class="alert-number">{{ overdue }}</span>
+                    <span class="alert-label">Overdue Tasks</span>
+                </div>
+            </div>
+            <div class="alert-item {% if due_soon > 0 %}alert-warning{% endif %}">
+                <div class="alert-content">
+                    <span class="alert-number">{{ due_soon }}</span>
+                    <span class="alert-label">Due in 3 Days</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-section">
+    <div class="chart-card">
+        <h3>Task Distribution</h3>
+        <canvas id="taskChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h3>Category Breakdown</h3>
+        <canvas id="categoryChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h3>Priority Distribution</h3>
+        <canvas id="priorityChart"></canvas>
+    </div>
+</div>
+
+<!-- Productivity Score & Streak -->
+<div class="analytics-row">
+    <div class="analytics-card score-card">
+        <h3>Productivity Score</h3>
+        <div class="score-display">
+            <div class="score-circle">
+                <svg viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="85" stroke="#3a3a4f" stroke-width="12" fill="none"/>
+                    <circle id="scoreCircle" cx="100" cy="100" r="85" 
+                            stroke="url(#scoreGradient)" stroke-width="12" fill="none"
+                            stroke-dasharray="534" stroke-dashoffset="534"
+                            transform="rotate(-90 100 100)"/>
+                    <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#5a6c7d"/>
+                            <stop offset="100%" style="stop-color:#8899aa"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="score-text">
+                    <span class="score-value" id="scoreValue">0</span>
+                    <span class="score-max">/100</span>
+                </div>
+            </div>
+            <p class="score-message">
+                {% if productivity_score >= 80 %}
+                    Outstanding! You're crushing your goals!
+                {% elif productivity_score >= 60 %}
+                    Great work! Keep the momentum!
+                {% elif productivity_score >= 40 %}
+                    Good progress! Stay focused!
+                {% elif productivity_score > 0 %}
+                    Getting started! You've got this!
+                {% else %}
+                    Time to begin your journey!
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="analytics-card streak-card">
+        <h3>Task Streak</h3>
+        <div class="streak-display">
+            <div class="streak-number">{{ streak_days }}</div>
+            <div class="streak-label">Day Streak</div>
+        </div>
+        <p class="streak-message">Keep completing tasks daily!</p>
+    </div>
+
+    <div class="analytics-card insights-card">
+        <h3>Quick Insights</h3>
+        <div class="insights-list">
+            <div class="insight-item">
+                <span class="insight-text">
+                    {% if total > 0 %}
+                        You've created {{ total }} task{{ 's' if total != 1 else '' }}
+                    {% else %}
+                        Start adding tasks to see insights!
+                    {% endif %}
+                </span>
+            </div>
+            <div class="insight-item">
+                <span class="insight-text">
+                    {% if completed > 0 %}
+                        {{ completed }} task{{ 's' if completed != 1 else '' }} completed
+                    {% else %}
+                        Complete your first task today!
+                    {% endif %}
+                </span>
+            </div>
+            <div class="insight-item">
+                <span class="insight-text">
+                    {% if high_priority > 0 %}
+                        {{ high_priority }} high priority task{{ 's' if high_priority != 1 else '' }} need{{ 's' if high_priority == 1 else '' }} attention
+                    {% else %}
+                        No urgent tasks at the moment
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Performance -->
+<div class="category-performance">
+    <h3>Category Performance</h3>
+    <div class="category-grid">
+        {% for cat, data in categories.items() %}
+            <div class="category-item">
+                <div class="category-header">
+                    <span class="category-name">{{ cat.capitalize() }}</span>
+                    <span class="category-percentage">
+                        {{ ((data.completed / data.total * 100) | round | int) if data.total > 0 else 0 }}%
+                    </span>
+                </div>
+                <div class="category-progress">
+                    <div class="category-progress-bar" style="width: {{ ((data.completed / data.total * 100) | round | int) if data.total > 0 else 0 }}%"></div>
+                </div>
+                <div class="category-stats">
+                    <span>{{ data.completed }}/{{ data.total }} completed</span>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-categories">
+                <p>No categories yet. Start adding tasks!</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="recent-activity">
+    <h3>Recent Activity</h3>
+    <div class="activity-timeline">
+        {% if recent_tasks %}
+            {% for task in recent_tasks %}
+                <div class="timeline-item {% if task.completed %}completed{% endif %}">
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <h4>{{ task.title }}</h4>
+                            <span class="timeline-badge priority-{{ task.priority }}">{{ task.priority }}</span>
+                        </div>
+                        <div class="timeline-meta">
+                            <span class="timeline-category">{{ task.category.capitalize() }}</span>
+                            {% if task.due_date %}
+                                <span class="timeline-date">Due: {{ task.due_date.strftime('%b %d') }}</span>
+                            {% endif %}
+                            <span class="timeline-status">
+                                {% if task.completed %}Completed{% else %}In Progress{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-timeline">
+                <p>No recent activity. Start adding tasks!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-var ctx = document.getElementById('taskChart');
+// Animate counters
+function animateCounter(id, target) {
+    let current = 0;
+    const increment = Math.ceil(target / 50);
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        document.getElementById(id).textContent = current;
+    }, 20);
+}
 
-// Data from Flask
-var total = {{ total }};
-var completed = {{ completed }};
-var pending = {{ pending }};
+// Animate on load
+window.addEventListener('load', () => {
+    animateCounter('totalCount', {{ total }});
+    animateCounter('completedCount', {{ completed }});
+    animateCounter('pendingCount', {{ pending }});
+    
+    // Progress bar
+    const progressBar = document.getElementById('progressBar');
+    setTimeout(() => {
+        progressBar.style.width = '{{ completion_rate }}%';
+    }, 300);
+    
+    // Productivity score circle
+    const scoreCircle = document.getElementById('scoreCircle');
+    const scoreValue = document.getElementById('scoreValue');
+    const targetScore = {{ productivity_score }};
+    const circumference = 534;
+    const offset = circumference - (targetScore / 100) * circumference;
+    
+    setTimeout(() => {
+        scoreCircle.style.strokeDashoffset = offset;
+        scoreCircle.style.transition = 'stroke-dashoffset 2s ease-in-out';
+        
+        let score = 0;
+        const scoreTimer = setInterval(() => {
+            score += 2;
+            if (score >= targetScore) {
+                score = targetScore;
+                clearInterval(scoreTimer);
+            }
+            scoreValue.textContent = score;
+        }, 30);
+    }, 500);
+});
 
-new Chart(ctx, {
+// Task Distribution Chart
+var ctx1 = document.getElementById('taskChart').getContext('2d');
+new Chart(ctx1, {
     type: 'doughnut',
     data: {
         labels: ['Completed', 'Pending'],
         datasets: [{
-            data: [completed, pending],
-            backgroundColor: [
-                'rgba(102, 126, 234, 0.8)',
-                'rgba(118, 75, 162, 0.8)'
-            ],
-            borderColor: [
-                'rgba(102, 126, 234, 1)',
-                'rgba(118, 75, 162, 1)'
-            ],
-            borderWidth: 2,
-            hoverOffset: 15
+            data: [{{ completed }}, {{ pending }}],
+            backgroundColor: ['rgba(90, 108, 125, 0.8)', 'rgba(58, 76, 93, 0.8)'],
+            borderColor: ['rgba(136, 153, 170, 1)', 'rgba(88, 102, 115, 1)'],
+            borderWidth: 2
         }]
     },
     options: {
         responsive: true,
+        maintainAspectRatio: true,
         plugins: {
-            legend: {
+            legend: { 
                 position: 'bottom',
-                labels: {
-                    font: {
-                        size: 14,
-                        family: "'Segoe UI', sans-serif"
-                    },
-                    padding: 20
-                }
-            },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: 12,
-                titleFont: {
-                    size: 16
-                },
-                bodyFont: {
-                    size: 14
-                },
-                cornerRadius: 8
+                labels: { color: '#b8b8d1', padding: 15 }
             }
+        }
+    }
+});
+
+// Category Chart
+var ctx2 = document.getElementById('categoryChart').getContext('2d');
+var categoryData = {{ categories|tojson }};
+var categoryLabels = Object.keys(categoryData);
+var categoryValues = categoryLabels.map(cat => categoryData[cat].total);
+
+new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: categoryLabels.map(c => c.charAt(0).toUpperCase() + c.slice(1)),
+        datasets: [{
+            label: 'Tasks',
+            data: categoryValues,
+            backgroundColor: 'rgba(90, 108, 125, 0.8)',
+            borderColor: 'rgba(136, 153, 170, 1)',
+            borderWidth: 2,
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { display: false }
         },
-        animation: {
-            animateScale: true,
-            animateRotate: true
+        scales: {
+            y: { 
+                beginAtZero: true,
+                ticks: { color: '#b8b8d1', stepSize: 1 },
+                grid: { color: 'rgba(100, 100, 120, 0.1)' }
+            },
+            x: { 
+                ticks: { color: '#b8b8d1' },
+                grid: { display: false }
+            }
+        }
+    }
+});
+
+// Priority Chart
+var ctx3 = document.getElementById('priorityChart').getContext('2d');
+new Chart(ctx3, {
+    type: 'pie',
+    data: {
+        labels: ['High', 'Medium', 'Low'],
+        datasets: [{
+            data: [{{ high_priority }}, {{ medium_priority }}, {{ low_priority }}],
+            backgroundColor: [
+                'rgba(255, 107, 107, 0.7)',
+                'rgba(255, 165, 0, 0.7)',
+                'rgba(123, 201, 111, 0.7)'
+            ],
+            borderColor: [
+                'rgba(255, 107, 107, 1)',
+                'rgba(255, 165, 0, 1)',
+                'rgba(123, 201, 111, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { 
+                position: 'bottom',
+                labels: { color: '#b8b8d1', padding: 15 }
+            }
         }
     }
 });
