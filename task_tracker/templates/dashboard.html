@@ -1,6 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Your Productivity Dashboard</h2>
+<h2>📊 Your Productivity Dashboard</h2>
+
+<div class="stats-container">
+    <div class="stat-card">
+        <h3>Total Tasks</h3>
+        <div class="stat-number">{{ total }}</div>
+        <p>All your tasks</p>
+    </div>
+    
+    <div class="stat-card">
+        <h3>✅ Completed</h3>
+        <div class="stat-number">{{ completed }}</div>
+        <p>Tasks finished</p>
+    </div>
+    
+    <div class="stat-card">
+        <h3>⏳ Pending</h3>
+        <div class="stat-number">{{ pending }}</div>
+        <p>Still to do</p>
+    </div>
+    
+    <div class="stat-card">
+        <h3>📈 Progress</h3>
+        <div class="stat-number">{{ (completed * 100 // total) if total > 0 else 0 }}%</div>
+        <p>Completion rate</p>
+    </div>
+</div>
 
 <canvas id="taskChart" width="400" height="200"></canvas>
 
@@ -14,12 +40,52 @@ var completed = {{ completed }};
 var pending = {{ pending }};
 
 new Chart(ctx, {
-    type: 'pie',
+    type: 'doughnut',
     data: {
         labels: ['Completed', 'Pending'],
         datasets: [{
-            data: [completed, pending]
+            data: [completed, pending],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(118, 75, 162, 0.8)'
+            ],
+            borderColor: [
+                'rgba(102, 126, 234, 1)',
+                'rgba(118, 75, 162, 1)'
+            ],
+            borderWidth: 2,
+            hoverOffset: 15
         }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: {
+                        size: 14,
+                        family: "'Segoe UI', sans-serif"
+                    },
+                    padding: 20
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: {
+                    size: 16
+                },
+                bodyFont: {
+                    size: 14
+                },
+                cornerRadius: 8
+            }
+        },
+        animation: {
+            animateScale: true,
+            animateRotate: true
+        }
     }
 });
 </script>

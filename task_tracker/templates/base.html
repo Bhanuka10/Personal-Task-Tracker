@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Tracker</title>
+    <title>📋 Task Tracker - Stay Productive</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <nav>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/tasks">Tasks</a>
-        <a href="/logout">Logout</a>
+        <div>
+            <a href="/dashboard">📊 Dashboard</a>
+            <a href="/tasks">✅ Tasks</a>
+        </div>
+        <div>
+            <a href="/logout" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px;">🚪 Logout</a>
+        </div>
     </nav>
     
     <div class="container">

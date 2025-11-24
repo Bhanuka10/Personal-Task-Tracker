@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>🔐 Login - Task Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <h2>Login</h2>
+        <h2>🔐 Welcome Back!</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">Login to manage your tasks</p>
         <form method="POST">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
+            <input type="email" name="email" placeholder="📧 Your Email" required autofocus>
+            <input type="password" name="password" placeholder="🔒 Your Password" required>
+            <button type="submit">🚀 Login</button>
         </form>
-        <p>Don't have an account? <a href="/register">Register here</a></p>
+        <p>Don't have an account? <a href="/register">✨ Create one now!</a></p>
     </div>
 </body>
 </html>

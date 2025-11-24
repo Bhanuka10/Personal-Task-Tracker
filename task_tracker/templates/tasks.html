@@ -1,22 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Your Tasks</h2>
+<h2>✨ Your Tasks</h2>
 
 <form method="POST" action="/add-task">
-    <input type="text" name="title" placeholder="Enter Task" required>
-    <button type="submit">Add</button>
+    <input type="text" name="title" placeholder="✍️ Enter a new task..." required>
+    <button type="submit">➕ Add Task</button>
 </form>
 
 <ul>
 {% for task in tasks %}
-    <li>
-        {% if task.completed %}
-            <strike>{{ task.title }}</strike>
-        {% else %}
-            {{ task.title }}
-            <a href="/complete-task/{{ task.id }}">✔</a>
-        {% endif %}
-        <a href="/delete-task/{{ task.id }}">🗑</a>
+    <li style="animation-delay: {{ loop.index0 * 0.1 }}s;">
+        <div style="flex: 1;">
+            {% if task.completed %}
+                <strike style="font-size: 18px;">{{ task.title }}</strike>
+            {% else %}
+                <span style="font-size: 18px; font-weight: 500;">{{ task.title }}</span>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 10px;">
+            {% if not task.completed %}
+                <a href="/complete-task/{{ task.id }}" title="Mark as complete" style="color: #28a745;">✔️</a>
+            {% endif %}
+            <a href="/delete-task/{{ task.id }}" title="Delete task" style="color: #dc3545;">🗑️</a>
+        </div>
+    </li>
+{% else %}
+    <li style="text-align: center; color: #999; font-style: italic;">
+        No tasks yet! Add your first task above 🚀
     </li>
 {% endfor %}
 </ul>
