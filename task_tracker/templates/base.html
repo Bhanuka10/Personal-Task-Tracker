@@ -8,17 +8,49 @@
 </head>
 <body>
     <nav>
-        <div>
+        <div class="nav-brand">
+            ✨ TaskMaster
+        </div>
+        <div class="nav-links">
             <a href="/dashboard">📊 Dashboard</a>
             <a href="/tasks">✅ Tasks</a>
-        </div>
-        <div>
-            <a href="/logout" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px;">🚪 Logout</a>
+            <a href="/logout" class="logout-btn">🚪 Logout</a>
         </div>
     </nav>
     
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+    <script>
+        // Create floating particles
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * window.innerWidth + 'px';
+            particle.style.top = window.innerHeight + 'px';
+            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            particle.style.opacity = Math.random() * 0.5 + 0.2;
+            
+            const size = Math.random() * 5 + 3;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            
+            document.body.appendChild(particle);
+            
+            const animation = particle.animate([
+                { transform: 'translateY(0) translateX(0)', opacity: particle.style.opacity },
+                { transform: `translateY(-${window.innerHeight + 100}px) translateX(${Math.random() * 200 - 100}px)`, opacity: 0 }
+            ], {
+                duration: parseFloat(particle.style.animationDuration) * 1000,
+                easing: 'linear'
+            });
+            
+            animation.onfinish = () => particle.remove();
+        }
+        
+        // Create particles periodically
+        setInterval(createParticle, 300);
+    </script>
 </body>
 </html>
